@@ -1,10 +1,8 @@
 import os
 from app.db import koneksi
 
-
 def bersihkan_layar():
     os.system("cls")
-
 
 def registrasi():
     bersihkan_layar()
