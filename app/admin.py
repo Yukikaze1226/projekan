@@ -15,8 +15,186 @@ def menu_admin(user):
 
         pilihan = input("Pilih menu: ")
 
-        if pilihan == "0":
+        if pilihan == "1":
+            kelola_akun(user)
+        elif pilihan == "0":
             break
         else:
             print("Fitur ini belum dibuat.")
             input("Tekan Enter untuk melanjutkan...")
+
+
+def ambil_akun():
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT users.id_users, users.nama, users.username, role.nama_role, users.status
+           FROM users
+           JOIN role ON users.id_role = role.id_role
+           ORDER BY users.id_users""")
+    data = cur.fetchall()
+    conn.close()
+    return data
+
+def kelola_akun(user):
+    while True:
+        bersihkan_layar()
+
+        data = ambil_akun()
+        print(tabulate(data, headers=["ID", "Nama", "Username", "Role", "Aktif"], tablefmt="fancy_grid"))
+
+        print("=== Kelola Akun Pengguna ===")
+        print("1. Tambah Akun")
+        print("2. Ubah Akun")
+        print("3. Nonaktifkan Akun")
+        print("4. Kembali")
+
+        pilihan = input("Pilih menu (1/2/3/4): ")
+
+        if pilihan == "1":
+            tambah_akun()
+        elif pilihan == "2":
+            ubah_akun()
+        elif pilihan == "3":
+            nonaktifkan_akun(user[0])
+        elif pilihan == "4":
+            break
+        else:
+            print("Pilihan tidak valid!")
+            input("Tekan Enter untuk melanjutkan...")
+
+def tambah_akun():
+    bersihkan_layar()
+    print("=== Tambah Akun ===")
+
+    # 1. Ambil data dari pengguna
+    nama = input("Nama lengkap: ")
+    username = input("Username: ")
+    password = input("Password: ")
+    no_hp = input("No. HP: ")
+    alamat = input("Alamat: ")
+    print("Role: 1. Admin   2. Petugas   3. Petani")
+    id_role = input("Pilih role (1/2/3): ")
+
+    if nama == "" or username == "" or password == "" or no_hp == "" or alamat == "":
+        print("Semua data wajib diisi!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+    if id_role not in ["1", "2", "3"]:
+        print("Pilihan role tidak valid!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM users WHERE username = %s OR no_hp = %s",
+        (username, no_hp),)
+    sudah_ada = cur.fetchone()
+
+    if sudah_ada is not None:
+        print("Username atau No. HP sudah dipakai!")
+    else:
+        cur.execute(
+            """INSERT INTO users (nama, username, password, no_hp, alamat, status, id_role)
+               VALUES (%s, %s, %s, %s, %s, TRUE, %s)""",
+            (nama, username, password, no_hp, alamat, id_role),)
+        conn.commit()
+        print("Akun berhasil ditambahkan!")
+
+    conn.close()
+    input("Tekan Enter untuk melanjutkan...")
+
+
+def ubah_akun():
+    bersihkan_layar()
+
+    data = ambil_akun()
+    print(tabulate(data, headers=["ID", "Nama", "Username", "Role", "Aktif"], tablefmt="fancy_grid"))
+
+    print("=== Ubah Akun ===")
+    id_user = input("Masukkan ID akun yang akan diubah: ")
+
+    ditemukan = False
+    for baris in data:
+        if str(baris[0]) == id_user:
+            ditemukan = True
+
+    if ditemukan == False:
+        print("Akun tidak ditemukan!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+
+    nama = input("Nama baru: ")
+    no_hp = input("No. HP baru: ")
+    alamat = input("Alamat baru: ")
+    print("Role: 1. Admin   2. Petugas   3. Petani")
+    id_role = input("Role baru (1/2/3): ")
+
+    if nama == "" or no_hp == "" or alamat == "":
+        print("Semua data wajib diisi!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+
+    if id_role not in ["1", "2", "3"]:
+        print("Pilihan role tidak valid!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+
+      conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM users WHERE no_hp = %s AND id_users != %s",
+        (no_hp, id_user),)
+    sudah_ada = cur.fetchone()
+    if sudah_ada is not None:
+        print("No. HP sudah dipakai akun lain!")
+    else:
+        cur.execute(
+            "UPDATE users SET nama = %s, no_hp = %s, alamat = %s, id_role = %s WHERE id_users = %s",
+            (nama, no_hp, alamat, id_role, id_user),)
+        conn.commit()
+        print("Akun berhasil diubah!")
+    conn.close()
+    input("Tekan Enter untuk melanjutkan...")
+
+
+def nonaktifkan_akun(id_login):
+    bersihkan_layar()
+
+    data = ambil_akun()
+    print(tabulate(data, headers=["ID", "Nama", "Username", "Role", "Aktif"], tablefmt="fancy_grid"))
+
+    print("=== Nonaktifkan Akun ===")
+    id_user = input("Masukkan ID akun yang akan dinonaktifkan: ")
+
+    # 1. Admin tidak boleh menonaktifkan akunnya sendiri
+    if id_user == str(id_login):
+        print("Anda tidak dapat menonaktifkan akun yang sedang digunakan!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+        
+    ditemukan = False
+    nama_akun = ""
+    for baris in data:
+        if str(baris[0]) == id_user:
+            ditemukan = True
+            nama_akun = baris[1]
+
+    if ditemukan == False:
+        print("Akun tidak ditemukan!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+
+    yakin = input("Nonaktifkan akun " + nama_akun + "? (y/n): ")
+
+    if yakin == "y":
+        conn = koneksi()
+        cur = conn.cursor()
+        cur.execute("UPDATE users SET status = FALSE WHERE id_users = %s", (id_user,))
+        conn.commit()
+        conn.close()
+        print("Akun berhasil dinonaktifkan.")
+    else:
+        print("Dibatalkan.")
+
+    input("Tekan Enter untuk melanjutkan...")
