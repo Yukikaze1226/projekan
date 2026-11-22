@@ -8,3 +8,7 @@
 /ooleholeh4(1).py
 /REMED.py
 /tes_connect.py
+.env
+venv/
+__pycache__/
+*.pyc
