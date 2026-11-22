@@ -144,7 +144,7 @@ def ubah_akun():
         input("Tekan Enter untuk melanjutkan...")
         return
 
-      conn = koneksi()
+    conn = koneksi()
     cur = conn.cursor()
     cur.execute(
         "SELECT * FROM users WHERE no_hp = %s AND id_users != %s",
