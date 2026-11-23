@@ -24,10 +24,10 @@ def menu_admin(user):
         elif pilihan == "3":
             kelola_pemasok()
         elif pilihan == "4":
-            periksa_dan_setujui_permintaan()
+            periksa_permintaan()
         elif pilihan == "5":
             cetak_laporan()
-        elif piliham == "0":
+        elif pilihan == "0":
             break
         else:
             print("Fitur ini belum dibuat.")
