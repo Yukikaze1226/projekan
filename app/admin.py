@@ -498,4 +498,98 @@ def ubah_pemasok():
     conn.close()
     input("Tekan Enter untuk melanjutkan...")
 
+def ambil_permintaan_menunggu():
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT permintaan.id_permintaan, users.nama, barang.nama_barang,
+                  permintaan.jumlah, permintaan.keperluan, barang.stok, permintaan.tanggal
+           FROM permintaan
+           JOIN users ON permintaan.id_users = users.id_users
+           JOIN barang ON permintaan.id_barang = barang.id_barang
+           WHERE permintaan.status = 'menunggu'
+           ORDER BY permintaan.id_permintaan""")
+    data = cur.fetchall()
+    conn.close()
+    return data
 
+def periksa_permintaan():
+    bersihkan_layar()
+
+    data = ambil_permintaan_menunggu()
+    if len(data) == 0:
+        print("Tidak ada permintaan yang menunggu.")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+    print(tabulate(data, headers=["ID", "Nama Petani", "Nama Barang", "Jumlah", "Keperluan", "Stok Tersedia", "Tanggal"], tablefmt="fancy_grid"))
+    print("=== Periksa dan Setujui Permintaan ===")
+    id_permintaan = input("Masukkan ID permintaan: ")
+    ditemukan = False
+    jumlah = 0
+    stok = 0
+    for baris in data:
+        if str(baris[0]) == id_permintaan:
+            ditemukan = True
+            jumlah = baris[3]
+            stok = baris[5]
+    if ditemukan == False:
+        print("Permintaan tidak ditemukan!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+    print("1. Setujui")
+    print("2. Tolak")
+    pilihan = input("Pilih aksi (1/2): ")
+    if pilihan == "1":
+        if stok < jumlah:
+            print("Stok tidak mencukupi! Permintaan tidak dapat disetujui.")
+            input("Tekan Enter untuk melanjutkan...")
+            return
+        status_baru = "disetujui"
+    elif pilihan == "2":
+        status_baru = "ditolak"
+    else:
+        print("Pilihan tidak valid!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE permintaan SET status = %s WHERE id_permintaan = %s",
+        (status_baru, id_permintaan))
+    conn.commit()
+    conn.close()
+    if status_baru == "disetujui":
+        print("Permintaan disetujui.")
+    else:
+        print("Permintaan ditolak.")
+    input("Tekan Enter untuk melanjutkan...")
+
+def cetak_laporan():
+    while True:
+        bersihkan_layar()
+        print("=== Cetak Laporan ===")
+        print("1. Laporan Stok")
+        print("2. Laporan Transaksi")
+        print("3. Laporan Pemakaian")
+        print("4. Kembali")
+        pilihan = input("Pilih menu (1/2/3/4): ")
+        if pilihan == "1":
+            laporan_stok()
+        elif pilihan == "2":
+            laporan_transaksi()
+        elif pilihan == "3":
+            laporan_pemakaian()
+        elif pilihan == "4":
+            break
+        else:
+            print("Pilihan tidak valid!")
+            input("Tekan Enter untuk melanjutkan...")
+            
+def simpan_ke_file(nama_file, judul, tabel):
+    yakin = input("Cetak laporan ke file? (y/n): ")
+    if yakin == "y":
+        file = open(nama_file, "w", encoding="utf-8")
+        file.write(judul + "\n")
+        file.write(tabel)
+        file.close()
+        print("Laporan disimpan ke " + nama_file)
