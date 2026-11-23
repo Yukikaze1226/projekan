@@ -460,3 +460,134 @@ def ubah_batas_minimum(data):
 
     print("Batas minimum berhasil diubah!")
     input("Tekan Enter untuk melanjutkan...")
+
+
+def ambil_pemasok():
+    # Mengambil semua pemasok dari database
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute("SELECT id_pemasok, nama_pemasok, no_hp, alamat FROM pemasok ORDER BY id_pemasok")
+    data = cur.fetchall()
+    conn.close()
+    return data
+
+
+def kelola_pemasok():
+    while True:
+        bersihkan_layar()
+
+        # Tampilkan semua pemasok dalam bentuk tabel
+        data = ambil_pemasok()
+        print(tabulate(data, headers=["ID", "Nama Pemasok", "No. HP", "Alamat"], tablefmt="fancy_grid"))
+
+        print("=== Kelola Data Pemasok ===")
+        print("1. Tambah Pemasok")
+        print("2. Ubah Pemasok")
+        print("3. Kembali")
+
+        pilihan = input("Pilih menu (1/2/3): ")
+
+        if pilihan == "1":
+            tambah_pemasok()
+        elif pilihan == "2":
+            ubah_pemasok()
+        elif pilihan == "3":
+            break
+        else:
+            print("Pilihan tidak valid!")
+            input("Tekan Enter untuk melanjutkan...")
+
+
+def tambah_pemasok():
+    bersihkan_layar()
+    print("=== Tambah Pemasok ===")
+
+    # 1. Ambil data dari pengguna
+    nama = input("Nama pemasok: ")
+    no_hp = input("No. HP: ")
+    alamat = input("Alamat: ")
+
+    # 2. Pastikan semua data terisi
+    if nama == "" or no_hp == "" or alamat == "":
+        print("Semua data wajib diisi!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+
+    # 3. Cek apakah nama atau No. HP sudah dipakai
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM pemasok WHERE nama_pemasok = %s OR no_hp = %s",
+        (nama, no_hp),
+    )
+    sudah_ada = cur.fetchone()
+
+    # 4. Jika belum dipakai, simpan pemasok baru
+    if sudah_ada is not None:
+        print("Nama pemasok atau No. HP sudah dipakai!")
+    else:
+        cur.execute(
+            "INSERT INTO pemasok (nama_pemasok, no_hp, alamat) VALUES (%s, %s, %s)",
+            (nama, no_hp, alamat),
+        )
+        conn.commit()
+        print("Pemasok berhasil ditambahkan!")
+
+    conn.close()
+    input("Tekan Enter untuk melanjutkan...")
+
+
+def ubah_pemasok():
+    bersihkan_layar()
+
+    # Tampilkan daftar pemasok
+    data = ambil_pemasok()
+    print(tabulate(data, headers=["ID", "Nama Pemasok", "No. HP", "Alamat"], tablefmt="fancy_grid"))
+
+    print("=== Ubah Pemasok ===")
+    id_pemasok = input("Masukkan ID pemasok yang akan diubah: ")
+
+    # 1. Cari ID tersebut di daftar pemasok
+    ditemukan = False
+    for baris in data:
+        if str(baris[0]) == id_pemasok:
+            ditemukan = True
+
+    if ditemukan == False:
+        print("Pemasok tidak ditemukan!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+
+    # 2. Ambil data baru
+    nama = input("Nama pemasok baru: ")
+    no_hp = input("No. HP baru: ")
+    alamat = input("Alamat baru: ")
+
+    # 3. Pastikan semua data terisi
+    if nama == "" or no_hp == "" or alamat == "":
+        print("Semua data wajib diisi!")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+
+    # 4. Cek apakah nama atau No. HP dipakai pemasok lain
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM pemasok WHERE (nama_pemasok = %s OR no_hp = %s) AND id_pemasok != %s",
+        (nama, no_hp, id_pemasok),
+    )
+    sudah_ada = cur.fetchone()
+
+    # 5. Jika aman, ubah datanya
+    if sudah_ada is not None:
+        print("Nama pemasok atau No. HP sudah dipakai pemasok lain!")
+    else:
+        cur.execute(
+            "UPDATE pemasok SET nama_pemasok = %s, no_hp = %s, alamat = %s WHERE id_pemasok = %s",
+            (nama, no_hp, alamat, id_pemasok),
+        )
+        conn.commit()
+        print("Pemasok berhasil diubah!")
+
+    conn.close()
+    input("Tekan Enter untuk melanjutkan...")
