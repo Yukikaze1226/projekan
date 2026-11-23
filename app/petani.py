@@ -14,7 +14,7 @@ def menu_petani(user):
         print("5. Lihat Riwayat Pengambilan")
         print("0. Logout")
 
-         pilihan = input("Pilih menu: ")
+        pilihan = input("Pilih menu: ")
         if pilihan == "1":
             lihat_stok()
         elif pilihan == "2":
