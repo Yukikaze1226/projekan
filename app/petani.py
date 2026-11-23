@@ -30,6 +30,7 @@ def menu_petani(user):
         else:
             print("Fitur ini belum dibuat.")
             input("Tekan Enter untuk melanjutkan...")
+
 def ambil_barang():
     conn = koneksi()
     cur = conn.cursor()
@@ -54,7 +55,7 @@ def lihat_stok():
 
     print("=== Lihat Stok Barang ===")
     print(tabulate(data, headers=["Nama Barang", "Kategori", "Satuan", "Stok"], tablefmt="fancy_grid"))
-    input("Tekan Enter untuk melanjutkan...")
+    input("Tekan Enter untuk kembali ke menu...")
 
 
 def ajukan_permintaan(user):
@@ -64,18 +65,28 @@ def ajukan_permintaan(user):
     print(tabulate(data, headers=["ID", "Nama Barang", "Satuan", "Stok"], tablefmt="fancy_grid"))
 
     print("=== Ajukan Permintaan ===")
+    print("(Ketik 0 pada isian mana pun untuk kembali ke menu)")
+
     id_barang = input("Masukkan ID barang: ")
+    if id_barang == "0":
+        return
+
     jumlah = input("Jumlah: ")
+    if jumlah == "0":
+        return
+
     keperluan = input("Keperluan: ")
+    if keperluan == "0":
+        return
 
     if id_barang == "" or jumlah == "" or keperluan == "":
         print("Semua data wajib diisi!")
-        input("Tekan Enter untuk melanjutkan...")
+        input("Tekan Enter untuk kembali ke menu...")
         return
 
     if jumlah.isdigit() == False or int(jumlah) <= 0:
         print("Jumlah harus berupa angka lebih dari 0!")
-        input("Tekan Enter untuk melanjutkan...")
+        input("Tekan Enter untuk kembali ke menu...")
         return
 
     ditemukan = False
@@ -85,7 +96,7 @@ def ajukan_permintaan(user):
 
     if ditemukan == False:
         print("Barang tidak ditemukan!")
-        input("Tekan Enter untuk melanjutkan...")
+        input("Tekan Enter untuk kembali ke menu...")
         return
 
     conn = koneksi()
@@ -98,7 +109,7 @@ def ajukan_permintaan(user):
     conn.close()
 
     print("Permintaan berhasil diajukan dengan status menunggu.")
-    input("Tekan Enter untuk melanjutkan...")
+    input("Tekan Enter untuk kembali ke menu...")
 
 
 def lihat_status_permintaan(user):
@@ -122,7 +133,7 @@ def lihat_status_permintaan(user):
         print("Anda belum pernah mengajukan permintaan.")
     else:
         print(tabulate(data, headers=["Tanggal", "Nama Barang", "Jumlah", "Keperluan", "Status"], tablefmt="fancy_grid"))
-    input("Tekan Enter untuk melanjutkan...")
+    input("Tekan Enter untuk kembali ke menu...")
 
 
 def ambil_permintaan_disetujui(id_users):
@@ -151,7 +162,7 @@ def melakukan_transaksi(user):
 
     if len(data) == 0:
         print("Tidak ada permintaan disetujui yang bisa diambil.")
-        input("Tekan Enter untuk melanjutkan...")
+        input("Tekan Enter untuk kembali ke menu...")
         return
 
     tampil = []
@@ -160,7 +171,10 @@ def melakukan_transaksi(user):
     print(tabulate(tampil, headers=["ID", "Nama Barang", "Jumlah"], tablefmt="fancy_grid"))
 
     print("=== Melakukan Transaksi ===")
+    print("(Ketik 0 untuk kembali ke menu)")
     id_permintaan = input("Masukkan ID permintaan: ")
+    if id_permintaan == "0":
+        return
 
     ditemukan = False
     id_barang = 0
@@ -177,15 +191,18 @@ def melakukan_transaksi(user):
 
     if ditemukan == False:
         print("Permintaan tidak ditemukan!")
-        input("Tekan Enter untuk melanjutkan...")
+        input("Tekan Enter untuk kembali ke menu...")
         return
 
     if stok < jumlah:
         print("Stok barang sedang tidak mencukupi!")
-        input("Tekan Enter untuk melanjutkan...")
+        input("Tekan Enter untuk kembali ke menu...")
         return
 
-    yakin = input("Konfirmasi pengambilan barang? (y/n): ")
+    yakin = input("Konfirmasi pengambilan barang? (y/n, 0 untuk kembali): ")
+
+    if yakin == "0":
+        return
 
     if yakin == "y":
         conn = koneksi()
@@ -211,7 +228,8 @@ def melakukan_transaksi(user):
     else:
         print("Dibatalkan.")
 
-    input("Tekan Enter untuk melanjutkan...")
+    input("Tekan Enter untuk kembali ke menu...")
+
 
 def lihat_riwayat(user):
     bersihkan_layar()
@@ -236,5 +254,5 @@ def lihat_riwayat(user):
         print("Belum ada riwayat pengambilan.")
     else:
         print(tabulate(data, headers=["Tanggal", "Nama Barang", "Jumlah", "Harga Total"], tablefmt="fancy_grid"))
-    input("Tekan Enter untuk melanjutkan...")
+    input("Tekan Enter untuk kembali ke menu...")
 
