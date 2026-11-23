@@ -593,3 +593,116 @@ def simpan_ke_file(nama_file, judul, tabel):
         file.write(tabel)
         file.close()
         print("Laporan disimpan ke " + nama_file)
+
+def laporan_stok():
+    bersihkan_layar()
+
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT barang.nama_barang, kategori.nama_kategori, barang.stok, barang.batas_minimum
+           FROM barang
+           JOIN kategori ON barang.id_kategori = kategori.id_kategori
+           ORDER BY barang.nama_barang""")
+    data = cur.fetchall()
+    conn.close()
+
+    tabel = tabulate(data, headers=["Nama Barang", "Kategori", "Stok", "Batas Minimum"], tablefmt="fancy_grid")
+
+    print("=== Laporan Stok ===")
+    print(tabel)
+
+    simpan_ke_file("laporan_stok.txt", "LAPORAN STOK", tabel)
+    input("Tekan Enter untuk melanjutkan...")
+
+def laporan_transaksi():
+    bersihkan_layar()
+
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT transaksi.tanggal, transaksi.jenis_transaksi, barang.nama_barang,
+                  detail_transaksi.jumlah, detail_transaksi.harga_satuan
+           FROM transaksi
+           JOIN detail_transaksi ON transaksi.id_transaksi = detail_transaksi.id_transaksi
+           JOIN barang ON detail_transaksi.id_barang = barang.id_barang
+           ORDER BY transaksi.tanggal""")
+    data = cur.fetchall()
+    conn.close()
+
+    tabel = tabulate(data, headers=["Tanggal", "Jenis Transaksi", "Nama Barang", "Jumlah", "Harga Satuan"], tablefmt="fancy_grid")
+
+    print("=== Laporan Transaksi ===")
+    print(tabel)
+
+    simpan_ke_file("laporan_transaksi.txt", "LAPORAN TRANSAKSI", tabel)
+    input("Tekan Enter untuk melanjutkan...")
+
+def laporan_pemakaian():
+    bersihkan_layar()
+    print("=== Laporan Pemakaian ===")
+    print("1. Per Petani")
+    print("2. Per Bulan")
+    print("3. Per Musim Tanam")
+    pilihan = input("Pilih filter (1/2/3): ")
+
+    dasar = """SELECT users.nama, barang.nama_barang, detail_transaksi.jumlah, transaksi.tanggal
+               FROM transaksi
+               JOIN detail_transaksi ON transaksi.id_transaksi = detail_transaksi.id_transaksi
+               JOIN barang ON detail_transaksi.id_barang = barang.id_barang
+               JOIN permintaan ON transaksi.id_permintaan = permintaan.id_permintaan
+               JOIN users ON permintaan.id_users = users.id_users
+               WHERE transaksi.jenis_transaksi = 'keluar' """
+
+    conn = koneksi()
+    cur = conn.cursor()
+
+    if pilihan == "1":
+        nama = input("Nama petani: ")
+        cur.execute(dasar + "AND users.nama = %s ORDER BY transaksi.tanggal", (nama,))
+    elif pilihan == "2":
+        bulan = input("Bulan (1-12): ")
+        tahun = input("Tahun: ")
+        if bulan.isdigit() == False or tahun.isdigit() == False:
+            print("Bulan dan tahun harus berupa angka!")
+            conn.close()
+            input("Tekan Enter untuk melanjutkan...")
+            return
+        cur.execute(
+            dasar + """AND EXTRACT(MONTH FROM transaksi.tanggal) = %s
+                       AND EXTRACT(YEAR FROM transaksi.tanggal) = %s
+                       ORDER BY transaksi.tanggal""",
+            (int(bulan), int(tahun)))
+    elif pilihan == "3":
+        print("1. Musim Hujan (Oktober - Maret)")
+        print("2. Musim Kemarau (April - September)")
+        musim = input("Pilih musim (1/2): ")
+        if musim == "1":
+            cur.execute(dasar + "AND EXTRACT(MONTH FROM transaksi.tanggal) IN (10, 11, 12, 1, 2, 3) ORDER BY transaksi.tanggal")
+        elif musim == "2":
+            cur.execute(dasar + "AND EXTRACT(MONTH FROM transaksi.tanggal) IN (4, 5, 6, 7, 8, 9) ORDER BY transaksi.tanggal")
+        else:
+            print("Pilihan musim tidak valid!")
+            conn.close()
+            input("Tekan Enter untuk melanjutkan...")
+            return
+    else:
+        print("Pilihan tidak valid!")
+        conn.close()
+        input("Tekan Enter untuk melanjutkan...")
+        return
+
+    data = cur.fetchall()
+    conn.close()
+
+    if len(data) == 0:
+        print("Tidak ada data pemakaian.")
+        input("Tekan Enter untuk melanjutkan...")
+        return
+
+    tabel = tabulate(data, headers=["Nama Petani", "Nama Barang", "Jumlah", "Tanggal"], tablefmt="fancy_grid")
+
+    print(tabel)
+
+    simpan_ke_file("laporan_pemakaian.txt", "LAPORAN PEMAKAIAN", tabel)
+    input("Tekan Enter untuk melanjutkan...")
