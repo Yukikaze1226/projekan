@@ -14,8 +14,18 @@ def menu_petani(user):
         print("5. Lihat Riwayat Pengambilan")
         print("0. Logout")
 
-        pilihan = input("Pilih menu: ")
-        if pilihan == "0":
+         pilihan = input("Pilih menu: ")
+        if pilihan == "1":
+            lihat_stok()
+        elif pilihan == "2":
+            ajukan_permintaan(user)
+        elif pilihan == "3":
+            lihat_status_permintaan(user)
+        elif pilihan == "4":
+            melakukan_transaksi(user)
+        elif pilihan == "5":
+            lihat_riwayat(user)
+        elif pilihan == "0":
             break
         else:
             print("Fitur ini belum dibuat.")
