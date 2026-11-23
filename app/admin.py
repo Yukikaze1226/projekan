@@ -21,7 +21,7 @@ def menu_admin(user):
             kelola_akun(user)
         elif pilihan == "2":
             kelola_data_master()
-        elif pilihan == "3"
+        elif pilihan == "3":
             kelola_pemasok()
         elif pilihan == "4":
             periksa_dan_setujui_permintaan()
