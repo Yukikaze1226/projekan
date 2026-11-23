@@ -23,6 +23,10 @@ def menu_admin(user):
             kelola_data_master()
         elif pilihan == "3"
             kelola_pemasok()
+        elif pilihan == "4":
+            periksa_dan_setujui_permintaan()
+        elif pilihan == "5":
+            cetak_laporan()
         elif piliham == "0":
             break
         else:
