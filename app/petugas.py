@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from app.auth import bersihkan_layar
 from app.db import koneksi
 from tabulate import tabulate
@@ -13,7 +12,6 @@ def menu_petugas(user):
         print("2. Catat Barang Masuk")
         print("3. Catat Barang Keluar")
         print("0. Logout")
-
         pilihan = input("Pilih menu: ")
         if pilihan == "1":
             kelola_barang()
@@ -27,16 +25,12 @@ def menu_petugas(user):
             print("Pilihan tidak ada.")
             input("Tekan Enter untuk melanjutkan...")
 
-
-# ---------- fungsi bantu ----------
-
 def isi_data(pertanyaan):
     """Tanya satu isian. Mengembalikan None kalau user mengetik 0."""
     jawaban = input(pertanyaan).strip()
     if jawaban == "0":
         return None
     return jawaban
-
 
 def ke_angka(teks):
     """Ubah teks ke angka (boleh desimal). Mengembalikan None kalau tidak valid."""
@@ -48,7 +42,6 @@ def ke_angka(teks):
         return None
     return nilai
 
-
 def ambil_satuan():
     """Ambil daftar satuan langsung dari enum jenis_satuan di database."""
     conn = koneksi()
@@ -57,7 +50,6 @@ def ambil_satuan():
     data = cur.fetchall()
     conn.close()
     return [baris[0] for baris in data]
-
 
 def ambil_barang():
     conn = koneksi()
@@ -73,15 +65,12 @@ def ambil_barang():
     data = cur.fetchall()
     conn.close()
     return data
-
-
+    
 def tampilkan_barang(data):
     print(tabulate(
         data,
         headers=["ID", "Nama Barang", "Kategori", "Satuan", "Harga", "Stok", "Batas Min", "Pemasok"],
         tablefmt="fancy_grid"))
-
-
 def ambil_ringkas():
     conn = koneksi()
     cur = conn.cursor()
@@ -90,16 +79,12 @@ def ambil_ringkas():
     conn.close()
     return data
 
-
 def cari_baris(data, id_teks):
     """Cari baris yang kolom pertamanya sama dengan id yang diketik."""
     for baris in data:
         if str(baris[0]) == id_teks:
             return baris
     return None
-
-
-# ---------- 1. KELOLA DATA BARANG ----------
 
 def kelola_barang():
     while True:
@@ -129,7 +114,6 @@ def kelola_barang():
             print("Pilihan tidak ada.")
             input("Tekan Enter untuk melanjutkan...")
 
-
 def lihat_barang():
     bersihkan_layar()
     print("=== Daftar Barang ===")
@@ -139,11 +123,8 @@ def lihat_barang():
     else:
         tampilkan_barang(data)
     input("Tekan Enter untuk kembali ke menu...")
-
-
 def stok_menipis():
     bersihkan_layar()
-
     conn = koneksi()
     cur = conn.cursor()
     cur.execute(
@@ -160,7 +141,6 @@ def stok_menipis():
     else:
         print(tabulate(data, headers=["Nama Barang", "Satuan", "Stok", "Batas Min"], tablefmt="fancy_grid"))
     input("Tekan Enter untuk kembali ke menu...")
-
 
 def tambah_barang():
     bersihkan_layar()
@@ -191,25 +171,20 @@ def tambah_barang():
     if satuan is None:
         return
     satuan = satuan.lower()
-
     harga = isi_data("Harga per satuan: ")
     if harga is None:
         return
-
     stok = isi_data("Stok awal: ")
     if stok is None:
         return
-
     batas = isi_data("Batas minimum stok: ")
     if batas is None:
         return
-
     print(tabulate(pemasok, headers=["ID", "Pemasok"], tablefmt="fancy_grid"))
     id_pemasok = isi_data("ID pemasok (Enter jika tidak ada): ")
     if id_pemasok is None:
         return
 
-    # validasi
     if nama == "" or id_kategori == "" or satuan == "" or harga == "" or stok == "" or batas == "":
         print("Semua data wajib diisi (kecuali pemasok)!")
         input("Tekan Enter untuk kembali ke menu...")
@@ -296,7 +271,6 @@ def ubah_barang():
     if batas is None:
         return
 
-    # isian kosong = pakai nilai lama
     if nama == "":
         nama = barang[1]
 
@@ -350,20 +324,16 @@ def hapus_barang():
 
     data = ambil_barang()
     tampilkan_barang(data)
-
     print("=== Hapus Barang ===")
     print("(Ketik 0 untuk kembali ke menu)")
-
     id_barang = isi_data("Masukkan ID barang: ")
     if id_barang is None:
         return
-
     barang = cari_baris(data, id_barang)
     if barang is None:
         print("Barang tidak ditemukan!")
         input("Tekan Enter untuk kembali ke menu...")
         return
-
     yakin = input("Yakin menghapus " + str(barang[1]) + "? (y/n): ")
     if yakin != "y":
         print("Dibatalkan.")
@@ -387,9 +357,6 @@ def hapus_barang():
         conn.close()
 
     input("Tekan Enter untuk kembali ke menu...")
-
-
-# ---------- 2. CATAT BARANG MASUK ----------
 
 def barang_masuk(user):
     bersihkan_layar()
@@ -418,7 +385,6 @@ def barang_masuk(user):
         print("Jumlah harus berupa angka lebih dari 0!")
         input("Tekan Enter untuk kembali ke menu...")
         return
-
     harga = isi_data("Harga satuan [" + str(barang[4]) + "] (Enter = pakai harga barang): ")
     if harga is None:
         return
@@ -430,7 +396,6 @@ def barang_masuk(user):
             print("Harga harus berupa angka lebih dari 0!")
             input("Tekan Enter untuk kembali ke menu...")
             return
-
     kadaluwarsa = isi_data("Tanggal kadaluwarsa (YYYY-MM-DD, Enter jika tidak ada): ")
     if kadaluwarsa is None:
         return
@@ -479,9 +444,6 @@ def barang_masuk(user):
 
     input("Tekan Enter untuk kembali ke menu...")
 
-
-# ---------- 3. CATAT BARANG KELUAR ----------
-
 def ambil_permintaan_siap():
     """Permintaan yang sudah disetujui dan belum dicatat transaksinya."""
     conn = koneksi()
@@ -516,33 +478,27 @@ def barang_keluar(user):
     for baris in data:
         tampil.append([baris[0], baris[1], baris[2], baris[3], baris[4], baris[5]])
     print(tabulate(tampil, headers=["ID", "Petani", "Barang", "Jumlah", "Keperluan", "Stok"], tablefmt="fancy_grid"))
-
     print("=== Catat Barang Keluar ===")
     print("(Ketik 0 untuk kembali ke menu)")
     id_permintaan = isi_data("Masukkan ID permintaan: ")
     if id_permintaan is None:
         return
-
     permintaan = cari_baris(data, id_permintaan)
     if permintaan is None:
         print("Permintaan tidak ditemukan!")
         input("Tekan Enter untuk kembali ke menu...")
         return
-
     jumlah = permintaan[3]
     stok = permintaan[5]
     id_barang = permintaan[6]
     harga = permintaan[7]
-
     if stok < jumlah:
         print("Stok barang sedang tidak mencukupi!")
         input("Tekan Enter untuk kembali ke menu...")
         return
-
     yakin = input("Konfirmasi penyerahan barang kepada " + str(permintaan[1]) + "? (y/n, 0 untuk kembali): ")
     if yakin == "0":
         return
-
     if yakin == "y":
         conn = koneksi()
         cur = conn.cursor()
@@ -559,13 +515,11 @@ def barang_keluar(user):
                    VALUES (%s, %s, %s, %s)""",
                 (id_transaksi, id_barang, jumlah, harga))
 
-            # stok hanya berkurang kalau masih cukup
             cur.execute(
                 "UPDATE barang SET stok = stok - %s WHERE id_barang = %s AND stok >= %s",
                 (jumlah, id_barang, jumlah))
             if cur.rowcount == 0:
                 raise Exception("Stok tidak mencukupi")
-
             conn.commit()
             print("Barang keluar berhasil dicatat.")
         except Exception as e:
@@ -575,5 +529,4 @@ def barang_keluar(user):
             conn.close()
     else:
         print("Dibatalkan.")
-
     input("Tekan Enter untuk kembali ke menu...")
