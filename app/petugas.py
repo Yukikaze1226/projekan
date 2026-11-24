@@ -348,7 +348,6 @@ def hapus_barang():
         print("Barang berhasil dihapus.")
     except Exception as e:
         conn.rollback()
-        # kode 23503 = barang masih dipakai di tabel lain (permintaan / detail_transaksi)
         if getattr(e, "pgcode", None) == "23503":
             print("Barang tidak bisa dihapus karena sudah dipakai di permintaan atau transaksi.")
         else:
