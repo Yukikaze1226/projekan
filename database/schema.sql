@@ -66,7 +66,8 @@ CREATE TABLE detail_transaksi (
     id_detail       SERIAL PRIMARY KEY,
     jumlah          INTEGER NOT NULL,
     harga_satuan    DECIMAL(12,2) NOT NULL,
-    tgl_kadaluwarsa DATE NOT NULL,
+    tgl_kadaluwarsa DATE,
+    sisa            INTEGER,
     id_barang       INT NOT NULL REFERENCES barang(id_barang),
     id_transaksi    INT NOT NULL REFERENCES transaksi(id_transaksi)
 );
