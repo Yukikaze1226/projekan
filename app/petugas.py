@@ -461,7 +461,58 @@ def ambil_permintaan_siap():
     data = cur.fetchall()
     conn.close()
     return data
+    
+def catat_keluar_fefo(cur, id_user, id_permintaan, id_barang, jumlah, harga):
+    
+    cur.execute(
+        """INSERT INTO transaksi (jenis_transaksi, tanggal, id_users, id_permintaan)
+           VALUES ('keluar', CURRENT_DATE, %s, %s)
+           RETURNING id_transaksi""",
+        (id_user, id_permintaan))
+    id_transaksi = cur.fetchone()[0]
 
+    cur.execute(
+        """SELECT detail_transaksi.id_detail, detail_transaksi.sisa, detail_transaksi.tgl_kadaluwarsa
+           FROM detail_transaksi
+           JOIN transaksi ON detail_transaksi.id_transaksi = transaksi.id_transaksi
+           WHERE detail_transaksi.id_barang = %s
+           AND transaksi.jenis_transaksi = 'masuk'
+           AND detail_transaksi.sisa > 0
+           ORDER BY detail_transaksi.tgl_kadaluwarsa ASC NULLS LAST, detail_transaksi.id_detail""",
+        (id_barang,))
+    batch = cur.fetchall()
+
+    kebutuhan = jumlah
+    rincian = []
+    for b in batch:
+        if kebutuhan > 0:
+            if b[1] >= kebutuhan:
+                ambil = kebutuhan
+            else:
+                ambil = b[1]
+
+            cur.execute(
+                """INSERT INTO detail_transaksi (id_transaksi, id_barang, jumlah, harga_satuan, tgl_kadaluwarsa)
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (id_transaksi, id_barang, ambil, harga, b[2]))
+
+            cur.execute(
+                "UPDATE detail_transaksi SET sisa = sisa - %s WHERE id_detail = %s",
+                (ambil, b[0]))
+
+            rincian.append("Batch kedaluwarsa " + str(b[2]) + ": " + str(ambil))
+            kebutuhan = kebutuhan - ambil
+
+    if kebutuhan > 0:
+        raise Exception("Stok batch tidak mencukupi")
+
+    cur.execute(
+        "UPDATE barang SET stok = stok - %s WHERE id_barang = %s AND stok >= %s",
+        (jumlah, id_barang, jumlah))
+    if cur.rowcount == 0:
+        raise Exception("Stok tidak mencukupi")
+
+    return rincian
 
 def barang_keluar(user):
     bersihkan_layar()
