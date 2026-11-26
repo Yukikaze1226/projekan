@@ -1,6 +1,12 @@
-INSERT INTO kategori (nama_kategori) VALUES ('Pupuk'), ('Pestisida'), ('Benih');
+INSERT INTO kategori (nama_kategori) VALUES
+('Pupuk'),
+('Pestisida'),
+('Benih');
 
-INSERT INTO role (nama_role) VALUES ('admin'), ('petugas'), ('petani');
+INSERT INTO role (nama_role) VALUES 
+('admin'), 
+('petugas'), 
+('petani');
 
 INSERT INTO users (nama, username, password, no_hp, alamat, status, id_role) VALUES
 ('rendra gemoy', 'rendra_admin', 'admin123', '08111111111', 'Desa Sukosari, Bondowoso', true, 1),
@@ -31,9 +37,13 @@ INSERT INTO transaksi (jenis_transaksi, tanggal, id_users, id_permintaan) VALUES
 ('keluar', '2026-11-02', 2, 1),
 ('keluar', '2026-11-06', 2, 3);
 
-INSERT INTO detail_transaksi (jumlah, harga_satuan, tgl_kadaluwarsa, id_barang, id_transaksi) VALUES
-(2500, 2750, '2028-10-28', 1, 1),
-(30, 15000, '2027-04-30', 5, 1),
-(1000, 3550, '2028-10-30', 2, 2),
-(250, 2800, '2028-10-28', 1, 3),
-(10, 15000, '2027-04-30', 5, 4);
+INSERT INTO detail_transaksi (jumlah, harga_satuan, tgl_kadaluwarsa, sisa, id_barang, id_transaksi) VALUES
+(2500, 2750, '2027-10-28', 2250, 1, 1),
+(30, 15000, '2027-04-30', 20, 5, 1),
+(30, 85000, '2027-12-31', 30, 3, 1),
+(8, 95000, '2027-09-30', 8, 4, 1),
+(3000, 3550, '2028-10-30', 3000, 2, 2),
+(2750, 2750, '2028-10-28', 2750, 1, 2),
+(30, 15000, '2027-08-31', 30, 5, 2),
+(250, 2800, '2027-10-28', NULL, 1, 3),
+(10, 15000, '2027-04-30', NULL, 5, 4);

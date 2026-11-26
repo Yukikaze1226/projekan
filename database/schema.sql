@@ -1,7 +1,3 @@
-DROP TABLE IF EXISTS detail_transaksi, transaksi, permintaan, barang,
-                     pemasok, users, role, kategori CASCADE;
-DROP TYPE IF EXISTS jenis_role, jenis_satuan;
-
 CREATE TYPE jenis_role AS ENUM ('admin', 'petugas', 'petani');
 CREATE TYPE jenis_satuan AS ENUM ('kg', 'gram', 'liter', 'ml', 'sachet', 'pcs');
 
@@ -66,7 +62,8 @@ CREATE TABLE detail_transaksi (
     id_detail       SERIAL PRIMARY KEY,
     jumlah          INTEGER NOT NULL,
     harga_satuan    DECIMAL(12,2) NOT NULL,
-    tgl_kadaluwarsa DATE NOT NULL,
+    tgl_kadaluwarsa DATE,
+    sisa            INTEGER,
     id_barang       INT NOT NULL REFERENCES barang(id_barang),
     id_transaksi    INT NOT NULL REFERENCES transaksi(id_transaksi)
 );

@@ -2,12 +2,12 @@ from app.auth import registrasi, login, bersihkan_layar
 from app.admin import menu_admin
 from app.petugas import menu_petugas
 from app.petani import menu_petani
-
+from app.ui import tampilkan_logo
 
 def main():
     while True:
         bersihkan_layar()
-        print("===== APLIKASI INVENTARISASI PUPUK DAN PESTISIDA =====")
+        tampilkan_logo()
         print("1. Login")
         print("2. Registrasi (Petani)")
         print("0. Keluar")

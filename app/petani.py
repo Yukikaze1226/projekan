@@ -1,9 +1,13 @@
 from app.auth import bersihkan_layar
-
+from app.db import koneksi
+from app.petugas import catat_keluar_fefo
+from app.ui import tampilkan_logo
+from tabulate import tabulate
 
 def menu_petani(user):
     while True:
         bersihkan_layar()
+        tampilkan_logo()
         print("===== MENU PETANI =====")
         print("Login sebagai:", user[1])
         print("1. Lihat Stok Barang")
@@ -14,8 +18,227 @@ def menu_petani(user):
         print("0. Logout")
 
         pilihan = input("Pilih menu: ")
-        if pilihan == "0":
+        if pilihan == "1":
+            lihat_stok()
+        elif pilihan == "2":
+            ajukan_permintaan(user)
+        elif pilihan == "3":
+            lihat_status_permintaan(user)
+        elif pilihan == "4":
+            melakukan_transaksi(user)
+        elif pilihan == "5":
+            lihat_riwayat(user)
+        elif pilihan == "0":
             break
         else:
             print("Fitur ini belum dibuat.")
             input("Tekan Enter untuk melanjutkan...")
+
+def ambil_barang():
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute("SELECT id_barang, nama_barang, satuan, stok FROM barang ORDER BY id_barang")
+    data = cur.fetchall()
+    conn.close()
+    return data
+
+
+def lihat_stok():
+    bersihkan_layar()
+
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT barang.nama_barang, kategori.nama_kategori, barang.satuan, barang.stok
+           FROM barang
+           JOIN kategori ON barang.id_kategori = kategori.id_kategori
+           ORDER BY barang.nama_barang""")
+    data = cur.fetchall()
+    conn.close()
+
+    print("=== Lihat Stok Barang ===")
+    print(tabulate(data, headers=["Nama Barang", "Kategori", "Satuan", "Stok"], tablefmt="fancy_grid"))
+    input("Tekan Enter untuk kembali ke menu...")
+
+
+def ajukan_permintaan(user):
+    bersihkan_layar()
+
+    data = ambil_barang()
+    print(tabulate(data, headers=["ID", "Nama Barang", "Satuan", "Stok"], tablefmt="fancy_grid"))
+
+    print("=== Ajukan Permintaan ===")
+    print("(Ketik 0 pada isian mana pun untuk kembali ke menu)")
+
+    id_barang = input("Masukkan ID barang: ")
+    if id_barang == "0":
+        return
+
+    jumlah = input("Jumlah: ")
+    if jumlah == "0":
+        return
+
+    keperluan = input("Keperluan: ")
+    if keperluan == "0":
+        return
+
+    if id_barang == "" or jumlah == "" or keperluan == "":
+        print("Semua data wajib diisi!")
+        input("Tekan Enter untuk kembali ke menu...")
+        return
+
+    if jumlah.isdigit() == False or int(jumlah) <= 0:
+        print("Jumlah harus berupa angka lebih dari 0!")
+        input("Tekan Enter untuk kembali ke menu...")
+        return
+
+    ditemukan = False
+    for baris in data:
+        if str(baris[0]) == id_barang:
+            ditemukan = True
+
+    if ditemukan == False:
+        print("Barang tidak ditemukan!")
+        input("Tekan Enter untuk kembali ke menu...")
+        return
+
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        """INSERT INTO permintaan (id_users, id_barang, jumlah, keperluan, tanggal, status)
+           VALUES (%s, %s, %s, %s, CURRENT_DATE, 'menunggu')""",
+        (user[0], id_barang, int(jumlah), keperluan))
+    conn.commit()
+    conn.close()
+
+    print("Permintaan berhasil diajukan dengan status menunggu.")
+    input("Tekan Enter untuk kembali ke menu...")
+
+
+def lihat_status_permintaan(user):
+    bersihkan_layar()
+
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT permintaan.tanggal, barang.nama_barang, permintaan.jumlah,
+                  permintaan.keperluan, permintaan.status
+           FROM permintaan
+           JOIN barang ON permintaan.id_barang = barang.id_barang
+           WHERE permintaan.id_users = %s
+           ORDER BY permintaan.tanggal DESC""",
+        (user[0],))
+    data = cur.fetchall()
+    conn.close()
+
+    print("=== Status Permintaan Saya ===")
+    if len(data) == 0:
+        print("Anda belum pernah mengajukan permintaan.")
+    else:
+        print(tabulate(data, headers=["Tanggal", "Nama Barang", "Jumlah", "Keperluan", "Status"], tablefmt="fancy_grid"))
+    input("Tekan Enter untuk kembali ke menu...")
+
+
+def ambil_permintaan_disetujui(id_users):
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT permintaan.id_permintaan, barang.nama_barang, permintaan.jumlah,
+                  permintaan.id_barang, barang.harga, barang.stok
+           FROM permintaan
+           JOIN barang ON permintaan.id_barang = barang.id_barang
+           WHERE permintaan.id_users = %s
+           AND permintaan.status = 'disetujui'
+           AND permintaan.id_permintaan NOT IN
+               (SELECT id_permintaan FROM transaksi WHERE id_permintaan IS NOT NULL)
+           ORDER BY permintaan.id_permintaan""",
+        (id_users,))
+    data = cur.fetchall()
+    conn.close()
+    return data
+
+
+def melakukan_transaksi(user):
+    bersihkan_layar()
+
+    # 1. Ambil permintaan milik petani ini yang sudah disetujui admin
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT permintaan.id_permintaan, barang.nama_barang, permintaan.jumlah, barang.satuan
+           FROM permintaan
+           JOIN barang ON permintaan.id_barang = barang.id_barang
+           WHERE permintaan.id_users = %s AND permintaan.status = 'disetujui'
+           ORDER BY permintaan.id_permintaan""",
+        (user[0],))
+    data = cur.fetchall()
+    conn.close()
+
+    # 2. Jika tidak ada, kembali ke menu
+    if len(data) == 0:
+        print("Tidak ada permintaan disetujui yang dapat diambil.")
+        input("Tekan Enter untuk kembali ke menu...")
+        return
+
+    print(tabulate(data, headers=["ID", "Nama Barang", "Jumlah", "Satuan"], tablefmt="fancy_grid"))
+    print("=== Melakukan Transaksi ===")
+    print("(Ketik 0 untuk kembali ke menu)")
+    id_permintaan = input("Masukkan ID permintaan: ")
+
+    if id_permintaan == "0":
+        return
+
+    # 3. Cari ID tersebut di daftar
+    ditemukan = False
+    for baris in data:
+        if str(baris[0]) == id_permintaan:
+            ditemukan = True
+
+    if ditemukan == False:
+        print("Permintaan tidak ditemukan!")
+        input("Tekan Enter untuk kembali ke menu...")
+        return
+
+    # 4. Minta konfirmasi, lalu ubah status menjadi 'diproses'
+    yakin = input("Konfirmasi pengambilan barang ini? (y/n): ")
+
+    if yakin == "y":
+        conn = koneksi()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE permintaan SET status = 'diproses' WHERE id_permintaan = %s",
+            (id_permintaan,))
+        conn.commit()
+        conn.close()
+        print("Transaksi pengambilan dicatat.")
+        print("Silakan menuju Petugas Gudang untuk penyerahan barang.")
+    else:
+        print("Dibatalkan.")
+
+    input("Tekan Enter untuk kembali ke menu...")
+
+
+def lihat_riwayat(user):
+    bersihkan_layar()
+
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT transaksi.tanggal, barang.nama_barang, detail_transaksi.jumlah,
+                  detail_transaksi.jumlah * detail_transaksi.harga_satuan
+           FROM transaksi
+           JOIN detail_transaksi ON transaksi.id_transaksi = detail_transaksi.id_transaksi
+           JOIN barang ON detail_transaksi.id_barang = barang.id_barang
+           JOIN permintaan ON transaksi.id_permintaan = permintaan.id_permintaan
+           WHERE permintaan.id_users = %s AND transaksi.jenis_transaksi = 'keluar'
+           ORDER BY transaksi.tanggal DESC""",
+        (user[0],))
+    data = cur.fetchall()
+    conn.close()
+
+    print("=== Riwayat Pengambilan ===")
+    if len(data) == 0:
+        print("Belum ada riwayat pengambilan.")
+    else:
+        print(tabulate(data, headers=["Tanggal", "Nama Barang", "Jumlah", "Harga Total"], tablefmt="fancy_grid"))
+    input("Tekan Enter untuk kembali ke menu...")

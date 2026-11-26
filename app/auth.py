@@ -58,7 +58,7 @@ def login():
     if data is None:
         print("Username atau password salah!")
         input("Tekan Enter untuk melanjutkan...")
-        return None
+        return login()
 
     if data[3] == False:
         print("Akun Anda nonaktif. Hubungi admin!")
