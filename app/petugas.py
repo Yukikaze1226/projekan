@@ -499,7 +499,6 @@ def catat_keluar_fefo(cur, id_user, id_permintaan, id_barang, jumlah, harga):
     return rincian
 
 def ambil_permintaan_siap():
-    # Permintaan yang sudah dikonfirmasi petani (status 'diproses') dan menunggu diserahkan
     conn = koneksi()
     cur = conn.cursor()
     cur.execute(
