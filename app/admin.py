@@ -707,4 +707,8 @@ def laporan_pemakaian():
     print(tabel)
 
     simpan_ke_file("laporan_pemakaian.txt", "LAPORAN PEMAKAIAN", tabel)
+<<<<<<< HEAD
     input("Tekan Enter untuk melanjutkan...")
+=======
+    input("Tekan Enter untuk melanjutkan...")
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370

@@ -1,7 +1,10 @@
 from app.auth import bersihkan_layar
 from app.db import koneksi
+<<<<<<< HEAD
 from app.petugas import catat_keluar_fefo
 from app.ui import tampilkan_logo
+=======
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370
 from tabulate import tabulate
 
 def menu_petani(user):
@@ -161,6 +164,7 @@ def ambil_permintaan_disetujui(id_users):
 def melakukan_transaksi(user):
     bersihkan_layar()
 
+<<<<<<< HEAD
     # 1. Ambil permintaan milik petani ini yang sudah disetujui admin
     conn = koneksi()
     cur = conn.cursor()
@@ -193,25 +197,89 @@ def melakukan_transaksi(user):
     for baris in data:
         if str(baris[0]) == id_permintaan:
             ditemukan = True
+=======
+    data = ambil_permintaan_disetujui(user[0])
+
+    if len(data) == 0:
+        print("Tidak ada permintaan disetujui yang bisa diambil.")
+        input("Tekan Enter untuk kembali ke menu...")
+        return
+
+    tampil = []
+    for baris in data:
+        tampil.append([baris[0], baris[1], baris[2]])
+    print(tabulate(tampil, headers=["ID", "Nama Barang", "Jumlah"], tablefmt="fancy_grid"))
+
+    print("=== Melakukan Transaksi ===")
+    print("(Ketik 0 untuk kembali ke menu)")
+    id_permintaan = input("Masukkan ID permintaan: ")
+    if id_permintaan == "0":
+        return
+
+    ditemukan = False
+    id_barang = 0
+    jumlah = 0
+    harga = 0
+    stok = 0
+    for baris in data:
+        if str(baris[0]) == id_permintaan:
+            ditemukan = True
+            jumlah = baris[2]
+            id_barang = baris[3]
+            harga = baris[4]
+            stok = baris[5]
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370
 
     if ditemukan == False:
         print("Permintaan tidak ditemukan!")
         input("Tekan Enter untuk kembali ke menu...")
         return
 
+<<<<<<< HEAD
     # 4. Minta konfirmasi, lalu ubah status menjadi 'diproses'
     yakin = input("Konfirmasi pengambilan barang ini? (y/n): ")
+=======
+    if stok < jumlah:
+        print("Stok barang sedang tidak mencukupi!")
+        input("Tekan Enter untuk kembali ke menu...")
+        return
+
+    yakin = input("Konfirmasi pengambilan barang? (y/n, 0 untuk kembali): ")
+
+    if yakin == "0":
+        return
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370
 
     if yakin == "y":
         conn = koneksi()
         cur = conn.cursor()
         cur.execute(
+<<<<<<< HEAD
             "UPDATE permintaan SET status = 'diproses' WHERE id_permintaan = %s",
             (id_permintaan,))
         conn.commit()
         conn.close()
         print("Transaksi pengambilan dicatat.")
         print("Silakan menuju Petugas Gudang untuk penyerahan barang.")
+=======
+            """INSERT INTO transaksi (jenis_transaksi, tanggal, id_users, id_permintaan)
+               VALUES ('keluar', CURRENT_DATE, %s, %s)
+               RETURNING id_transaksi""",
+            (user[0], id_permintaan))
+        id_transaksi = cur.fetchone()[0]
+
+        cur.execute(
+            """INSERT INTO detail_transaksi (id_transaksi, id_barang, jumlah, harga_satuan)
+               VALUES (%s, %s, %s, %s)""",
+            (id_transaksi, id_barang, jumlah, harga))
+
+        cur.execute(
+            "UPDATE barang SET stok = stok - %s WHERE id_barang = %s",
+            (jumlah, id_barang))
+        conn.commit()
+        conn.close()
+        print("Transaksi berhasil dicatat.")
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370
     else:
         print("Dibatalkan.")
 
@@ -241,4 +309,9 @@ def lihat_riwayat(user):
         print("Belum ada riwayat pengambilan.")
     else:
         print(tabulate(data, headers=["Tanggal", "Nama Barang", "Jumlah", "Harga Total"], tablefmt="fancy_grid"))
+<<<<<<< HEAD
     input("Tekan Enter untuk kembali ke menu...")
+=======
+    input("Tekan Enter untuk kembali ke menu...")
+
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370

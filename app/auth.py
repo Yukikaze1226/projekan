@@ -1,10 +1,8 @@
 import os
 from app.db import koneksi
 
-
 def bersihkan_layar():
     os.system("cls")
-
 
 def registrasi():
     bersihkan_layar()
@@ -16,7 +14,6 @@ def registrasi():
     no_hp = input("No. HP: ")
     alamat = input("Alamat: ")
 
-    # 2. Pastikan tidak ada data yang kosong
     if nama == "" or username == "" or password == "" or no_hp == "" or alamat == "":
         print("Semua data wajib diisi!")
         input("Tekan Enter untuk melanjutkan...")

@@ -1,7 +1,10 @@
 from datetime import datetime
 from app.auth import bersihkan_layar
 from app.db import koneksi
+<<<<<<< HEAD
 from app.ui import tampilkan_logo
+=======
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370
 from tabulate import tabulate
 
 def menu_petugas(user):
@@ -426,9 +429,15 @@ def barang_masuk(user):
             id_transaksi = cur.fetchone()[0]
 
             cur.execute(
+<<<<<<< HEAD
                 """INSERT INTO detail_transaksi (id_transaksi, id_barang, jumlah, harga_satuan, tgl_kadaluwarsa, sisa)
                    VALUES (%s, %s, %s, %s, %s, %s)""",
                 (id_transaksi, id_barang, int(jumlah), harga_angka, kadaluwarsa, int(jumlah)))
+=======
+                """INSERT INTO detail_transaksi (id_transaksi, id_barang, jumlah, harga_satuan, tgl_kadaluwarsa)
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (id_transaksi, id_barang, int(jumlah), harga_angka, kadaluwarsa))
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370
 
             cur.execute(
                 "UPDATE barang SET stok = stok + %s WHERE id_barang = %s",
@@ -445,6 +454,27 @@ def barang_masuk(user):
 
     input("Tekan Enter untuk kembali ke menu...")
 
+<<<<<<< HEAD
+=======
+def ambil_permintaan_siap():
+    """Permintaan yang sudah disetujui dan belum dicatat transaksinya."""
+    conn = koneksi()
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT permintaan.id_permintaan, users.nama, barang.nama_barang,
+                  permintaan.jumlah, permintaan.keperluan, barang.stok,
+                  permintaan.id_barang, barang.harga
+           FROM permintaan
+           JOIN users ON permintaan.id_users = users.id_users
+           JOIN barang ON permintaan.id_barang = barang.id_barang
+           WHERE permintaan.status = 'disetujui'
+           AND permintaan.id_permintaan NOT IN
+               (SELECT id_permintaan FROM transaksi WHERE id_permintaan IS NOT NULL)
+           ORDER BY permintaan.id_permintaan""")
+    data = cur.fetchall()
+    conn.close()
+    return data
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370
     
 def catat_keluar_fefo(cur, id_user, id_permintaan, id_barang, jumlah, harga):
     
@@ -498,6 +528,7 @@ def catat_keluar_fefo(cur, id_user, id_permintaan, id_barang, jumlah, harga):
 
     return rincian
 
+<<<<<<< HEAD
 def ambil_permintaan_siap():
     # Permintaan yang sudah dikonfirmasi petani (status 'diproses') dan menunggu diserahkan
     conn = koneksi()
@@ -515,6 +546,8 @@ def ambil_permintaan_siap():
     conn.close()
     return data
 
+=======
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370
 def barang_keluar(user):
     bersihkan_layar()
 
@@ -554,6 +587,7 @@ def barang_keluar(user):
         conn = koneksi()
         cur = conn.cursor()
         try:
+<<<<<<< HEAD
             rincian = catat_keluar_fefo(cur, user[0], id_permintaan, id_barang, jumlah, harga)
 
             # Ubah status permintaan menjadi selesai
@@ -566,8 +600,35 @@ def barang_keluar(user):
             print("Rincian batch yang diambil:")
             for r in rincian:
                 print("-", r)
+=======
+            cur.execute(
+                """INSERT INTO transaksi (jenis_transaksi, tanggal, id_users, id_permintaan)
+                   VALUES ('keluar', CURRENT_DATE, %s, %s)
+                   RETURNING id_transaksi""",
+                (user[0], id_permintaan))
+            id_transaksi = cur.fetchone()[0]
+
+            cur.execute(
+                """INSERT INTO detail_transaksi (id_transaksi, id_barang, jumlah, harga_satuan)
+                   VALUES (%s, %s, %s, %s)""",
+                (id_transaksi, id_barang, jumlah, harga))
+
+            cur.execute(
+                "UPDATE barang SET stok = stok - %s WHERE id_barang = %s AND stok >= %s",
+                (jumlah, id_barang, jumlah))
+            if cur.rowcount == 0:
+                raise Exception("Stok tidak mencukupi")
+            conn.commit()
+            print("Barang keluar berhasil dicatat.")
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370
         except Exception as e:
             conn.rollback()
             print("Gagal mencatat barang keluar:", e)
         finally:
             conn.close()
+<<<<<<< HEAD
+=======
+    else:
+        print("Dibatalkan.")
+    input("Tekan Enter untuk kembali ke menu...")
+>>>>>>> 9f9b4d32c89fc570a23441156943dc4d2540d370
