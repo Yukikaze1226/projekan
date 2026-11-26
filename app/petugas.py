@@ -554,8 +554,6 @@ def barang_keluar(user):
         cur = conn.cursor()
         try:
             rincian = catat_keluar_fefo(cur, user[0], id_permintaan, id_barang, jumlah, harga)
-
-            # Ubah status permintaan menjadi selesai
             cur.execute(
                 "UPDATE permintaan SET status = 'selesai' WHERE id_permintaan = %s",
                 (id_permintaan,))
