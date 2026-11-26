@@ -161,7 +161,6 @@ def ambil_permintaan_disetujui(id_users):
 def melakukan_transaksi(user):
     bersihkan_layar()
 
-    # 1. Ambil permintaan milik petani ini yang sudah disetujui admin
     conn = koneksi()
     cur = conn.cursor()
     cur.execute(
@@ -174,7 +173,6 @@ def melakukan_transaksi(user):
     data = cur.fetchall()
     conn.close()
 
-    # 2. Jika tidak ada, kembali ke menu
     if len(data) == 0:
         print("Tidak ada permintaan disetujui yang dapat diambil.")
         input("Tekan Enter untuk kembali ke menu...")
@@ -187,8 +185,7 @@ def melakukan_transaksi(user):
 
     if id_permintaan == "0":
         return
-
-    # 3. Cari ID tersebut di daftar
+        
     ditemukan = False
     for baris in data:
         if str(baris[0]) == id_permintaan:
@@ -198,8 +195,7 @@ def melakukan_transaksi(user):
         print("Permintaan tidak ditemukan!")
         input("Tekan Enter untuk kembali ke menu...")
         return
-
-    # 4. Minta konfirmasi, lalu ubah status menjadi 'diproses'
+        
     yakin = input("Konfirmasi pengambilan barang ini? (y/n): ")
 
     if yakin == "y":
